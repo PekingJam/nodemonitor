@@ -1,0 +1,67 @@
+allow-lan: true
+external-controller: 127.0.0.1:32581
+mixed-port: 32580
+ipv6: true
+log-level: info
+
+dns:
+  enable: true
+  ipv6: true
+  respect-rules: true
+  enhanced-mode: normal
+  nameserver:
+    - https://1.1.1.1/dns-query
+    - https://8.8.8.8/dns-query
+  proxy-server-nameserver:
+    - https://120.53.53.53/dns-query
+    - https://223.5.5.5/dns-query
+  nameserver-policy:
+    "rule-set:cn_domain,private_domain":
+      - https://120.53.53.53/dns-query
+      - https://223.5.5.5/dns-query
+    "rule-set:geolocation-!cn":
+      - "https://1.1.1.1/dns-query"
+      - "https://8.8.8.8/dns-query"
+
+proxies:
+  - client-fingerprint: chrome
+    flow: xtls-rprx-vision
+    name: hk
+    network: tcp
+    port: 32560
+    reality-opts:
+      public-key: GMzcLkrF232323kgLUYM63avbOn2C1SfV62w5A0
+      short-id: d9443293232323
+    server: 47.122.46.2
+    servername: www.apple.com
+    skip-cert-verify: false
+    tfo: false
+    tls: true
+    type: vless
+    uuid: ebefe20832323238e546e9
+
+proxy-groups:
+  - name: "proxy"
+    type: select
+    proxies:
+      - hk
+rules:
+  - DOMAIN,drive.www.baidu.com.cn,DIRECT
+  - RULE-SET,private_domain,DIRECT
+  - RULE-SET,cn_domain,DIRECT
+  - DOMAIN,drive.www.baidu.com.cn,DIRECT
+  - MATCH,proxy
+
+rule-anchor:
+  domain: &domain { type: http, interval: 86400, behavior: domain, format: yaml }
+
+rule-providers:
+  private_domain:
+    <<: *domain
+    url: "https://drive.www.baidu.com.cn/d/www.baidu.com/private.txt"
+  cn_domain:
+    <<: *domain
+    url: "https://drive.www.baidu.com.cn/d/www.baidu.com/direct.txt"
+  geolocation-!cn:
+    <<: *domain
+    url: "https://drive.www.baidu.com.cn/d/www.baidu.com/geolocation-!cn.yaml"
